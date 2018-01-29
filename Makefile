@@ -11,6 +11,6 @@ DEPEND=$(OBJS:.o=.d)
 oath-exec: $(OBJS)
 
 clean:
-	rm -f $(OBJS) oath-exec
+	rm -f $(OBJS) $(DEPEND) oath-exec
 
 .PHONY: all clean
