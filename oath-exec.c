@@ -177,10 +177,10 @@ int generate_random_b32(int len)
 		r = read(fd, buf + pos, len - pos);
 		if (r < 0) {
 			perror("Can't read random");
-			goto out1;
+			goto out2;
 		} else if (r == 0) {
 			fprintf(stderr, "EOF reached on /dev/random?!\n");
-			goto out1;
+			goto out2;
 		}
 
 		pos += r;
@@ -188,7 +188,7 @@ int generate_random_b32(int len)
 
 	if ((err = oath_base32_encode(buf, len, &b32, &b32len)) != OATH_OK) {
 		fprintf(stderr, "Can't base32 encode secret: %s\n", oath_strerror(err));
-		goto out1;
+		goto out2;
 	}
 
 	printf("%s\n", b32);
@@ -198,8 +198,9 @@ int generate_random_b32(int len)
 
 	ret = EXIT_SUCCESS;
 
-out1:
+out2:
 	close(fd);
+out1:
 	memset(buf, 0, sizeof(buf));
 	return ret;
 }
