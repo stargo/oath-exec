@@ -273,6 +273,11 @@ int main(int argc, char **argv)
 		}
 	}
 
+	if (strlen(otp) != config.digits) {
+		oath_done();
+		exit(EXIT_FAILURE);
+	}
+
 	valid = OATH_INVALID_OTP;
 	switch(config.type) {
 		case OATH_TYPE_TOTP:
