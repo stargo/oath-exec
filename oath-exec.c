@@ -148,6 +148,7 @@ int read_config(char *filename, oath_config *config)
 out2:
 	close(fd);
 out1:
+	memset(filebuf, 0, sizeof(filebuf));
 	return ret;
 }
 
@@ -192,10 +193,14 @@ int generate_random_b32(int len)
 
 	printf("%s\n", b32);
 
+	memset(b32, 0, b32len);
+	free(b32);
+
 	ret = EXIT_SUCCESS;
 
 out1:
 	close(fd);
+	memset(buf, 0, sizeof(buf));
 	return ret;
 }
 
@@ -292,6 +297,7 @@ int main(int argc, char **argv)
 	memset(otp, 0, sizeof(otp));
 	memset(config.secret, 0, config.secret_length);
 	free(config.secret);
+	memset(&config, 0, sizeof(oath_config));
 
 	if (valid >= 0 && (valid != OATH_INVALID_OTP)) {
 		char **newargv = NULL;
