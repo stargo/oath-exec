@@ -226,7 +226,7 @@ int main(int argc, char **argv)
 
 	if ((err = oath_init()) != OATH_OK) {
 		fprintf(stderr, "Can't initialize OATH library: %s\n", oath_strerror(err));
-		exit(EXIT_FAILURE);
+		goto err1;
 	}
 
 	while((opt = getopt(argc, argv, "c:g:")) != -1) {
@@ -239,28 +239,24 @@ int main(int argc, char **argv)
 				genlength = strtoul(optarg, &endptr, 10);
 				if (errno != 0 || endptr == NULL || *endptr != '\0') {
 					syntax(argv[0]);
-					oath_done();
-					exit(EXIT_FAILURE);
+					goto err2;
 				}
 				exit(generate_random_b32(genlength));
 				break;
 			default:
 				syntax(argv[0]);
-				oath_done();
-				exit(EXIT_FAILURE);
+				goto err2;
 				break;
 		}
 	}
 
 	if (configfile == NULL || optind == argc) {
 		syntax(argv[0]);
-		oath_done();
-		exit(EXIT_FAILURE);
+		goto err2;
 	}
 
 	if (!read_config(configfile, &config)) {
-		oath_done();
-		exit(EXIT_FAILURE);
+		goto err2;
 	}
 
 	printf("%cOTP: ", ((config.type == OATH_TYPE_TOTP)?'T':'H'));
@@ -268,8 +264,7 @@ int main(int argc, char **argv)
 
 	r = read(STDIN_FILENO, otp, sizeof(otp)-1);
 	if (r <= 0) {
-		oath_done();
-		exit(EXIT_FAILURE);
+		goto err2;
 	}
 
 	for (i = 0; i < r; i++) {
@@ -280,8 +275,7 @@ int main(int argc, char **argv)
 	}
 
 	if (strlen(otp) != config.digits) {
-		oath_done();
-		exit(EXIT_FAILURE);
+		goto err2;
 	}
 
 	valid = OATH_INVALID_OTP;
@@ -307,7 +301,7 @@ int main(int argc, char **argv)
 		newargv = malloc(sizeof(char*) * ((argc - optind) + 1));
 		if (newargv == NULL) {
 			perror("Can't allocate memory for argv");
-			exit(EXIT_FAILURE);
+			goto err1;
 		}
 		memset(newargv, 0, sizeof(char*) * ((argc - optind) + 1));
 		for(i = 0; i < argc - optind; i++) {
@@ -318,5 +312,16 @@ int main(int argc, char **argv)
 		perror("Can't execute");
 	}
 
+	goto err1;
+
+err2:
+	oath_done();
+err1:
+	memset(otp, 0, sizeof(otp));
+	if (config.secret != NULL) {
+		memset(config.secret, 0, config.secret_length);
+		free(config.secret);
+	}
+	memset(&config, 0, sizeof(oath_config));
 	return EXIT_FAILURE;
 }
